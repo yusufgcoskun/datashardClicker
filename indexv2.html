@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Data Shard Clicker</title>
+<style>
+    body {
+        background: #0d0d0d;
+        font-family: Arial, sans-serif;
+        color: #9be5ff;
+        text-align: center;
+        margin-top: 40px;
+    }
+    #shardBtn {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #3cf 0%, #147 70%);
+        box-shadow: 0 0 20px #3cf;
+        margin: 20px auto;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: bold;
+    }
+    #shardBtn:active {
+        transform: scale(0.95);
+    }
+
+    #panel {
+        width: 380px;
+        margin: 0 auto;
+        background: #111;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 12px #134;
+    }
+
+    .building {
+        margin-top: 20px;
+        padding: 12px;
+        background: #151515;
+        border-radius: 10px;
+        box-shadow: 0 0 8px #123;
+    }
+
+    button {
+        margin-top: 10px;
+        padding: 10px 16px;
+        font-size: 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #0d6efd;
+        color: white;
+        box-shadow: 0 0 10px #0af;
+    }
+    button:hover {
+        background: #0b5cd8;
+    }
+</style>
+</head>
+<body>
+
+<h1>Data Shard Clicker</h1>
+
+<div id="shardBtn">Tıkla!</div>
+
+<h2>Shard: <span id="shardCount">0</span></h2>
+
+<div id="panel">
+
+    <div class="building">
+        <div style="font-size:20px; margin-bottom:4px;">
+            Extractor × <span id="extractorCount">0</span>
+        </div>
+        <div style="font-size:14px; margin-bottom:6px; color:#b5f3ff;">
+            Saniyede shard üretir.
+        </div>
+        <div>Maliyet: <span id="extractorCost">20</span></div>
+        <button onclick="buyExtractor()">Extractor Satın Al (E)</button>
+    </div>
+
+</div>
+
+<script>
+// ---------- Değişkenler ----------
+let shards = 0;
+
+let extractorCount = 0;
+let extractorBaseRate = 1; // her extractor saniyede 1 shard üretir
+let extractorCost = 20;
+
+// ---------- Tıklama ile shard toplama ----------
+document.getElementById("shardBtn").addEventListener("click", () => {
+    shards++;
+    updateUI();
+});
+
+// ---------- klavyeden E ile satın alma ----------
+document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "e") {
+        buyExtractor();
+    }
+});
+
+// ---------- Extractor satın al ----------
+function buyExtractor() {
+    if (shards >= extractorCost) {
+        shards -= extractorCost;
+        extractorCount++;
+        extractorCost = Math.floor(extractorCost * 1.25); // maliyet artışı
+        updateUI();
+    }
+}
+
+// ---------- otomatik üretim (her saniye) ----------
+function gameTick() {
+    let income = extractorCount * extractorBaseRate;
+    shards += income;
+    updateUI();
+}
+
+// ---------- UI güncelle ----------
+function updateUI() {
+    document.getElementById("shardCount").innerText = shards.toLocaleString("tr-TR");
+    document.getElementById("extractorCount").innerText = extractorCount;
+    document.getElementById("extractorCost").innerText = extractorCost.toLocaleString("tr-TR");
+}
+
+// ---------- her saniye üretim başlat ----------
+setInterval(gameTick, 1000);
+
+</script>
+</body>
+</html>
