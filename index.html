@@ -25,7 +25,9 @@
 
   .container{
     width:100%;max-width:1060px;
-    display:grid;
+    display:flex;
+    justify-content: center;
+    align-items: center;
     grid-template-columns: 1fr 360px;
     gap:20px;
   }
@@ -168,20 +170,19 @@
 
       <div class="stats">
         <div class="big-number"><span id="shardCount">0</span> <small style="font-size:12px;color:#9aa6b8">shards</small></div>
-        <div class="sub">Shards / s: <strong id="pps">0</strong> — Click value: <strong id="perClick">1</strong></div>
+        <div class="sub"></div>
         <div id="overclockTimer" style="position:absolute;left:50%;transform:translateX(-50%);color:#ffd36c;font-weight:700;font-size:12px;">
             Overclock: 30s
         </div>
 
 
         <div class="controls">
-          <button id="clickBtn" class="btn primary">Click</button>
-          <button id="rebootBtn" class="btn">System Reboot</button>
-          <button id="exportBtn" class="btn">Export Save</button>
+          <button id="clickBtn" class="btn primary">Tıkla</button>
+          <button id="rebootBtn" class="btn">Sıfırla</button>
         </div>
 
         <div style="margin-top:8px;font-size:13px;color:#9aa6b8">
-          Level: <span id="playerLevel">1</span> — Next Level: <span id="nextLevelReq">100</span> shards
+          Level: <span id="playerLevel">1</span> — Sonraki Level: <span id="nextLevelReq">100</span> shards
         </div>
 
       </div>
@@ -189,22 +190,21 @@
 
     <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
       <div class="panel" style="flex:1;min-width:300px">
-        <h3>Buildings / Upgrades</h3>
+        <h3>Yükseltmeler</h3>
         <div id="buildingsList"></div>
       </div>
 
       <div class="panel" style="width:260px">
-        <h3>Achievements</h3>
+        <h3>Başarımlar</h3>
         <div id="achievementsList" class="achievements"></div>
         <div style="margin-top:10px">
-          <strong>Save:</strong> auto every 5s — <button id="resetBtn" class="btn">Hard Reset</button>
+          <strong>Save:</strong> auto every 5s — <button id="resetBtn" class="btn">Sıfırla</button>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <div>Version: Prototype · Neon UI</div>
-      <div><small id="saveTime">Saved: —</small></div>
+      <div><small id="saveTime">Kayıt Tarihi: —</small></div>
     </div>
   </div>
 
@@ -258,9 +258,8 @@ const LEVELS = [
 
   // building definitions
   const BUILDING_TEMPLATES = [
-    { id:'extractor', name:'Extractor', baseCost:15, basePps:1, desc:'Produces shards per second.' },
-    { id:'optimizer', name:'Optimizer', baseCost:15, basePps:5, desc:'Global production boost.' },
-    { id:'overclocker', name:'Overclocker', baseCost:15, basePps:0, desc:'Temporary burst production (manual activation).' },
+    { id:'extractor', name:'Extractor', baseCost:15, basePps:1, desc:'Saniye başına shard çıkartmayı arttırır.' },
+    { id:'overclocker', name:'Zamanlayıcı (30sn)', baseCost:15, basePps:0, desc:'^0 saniyeliğine boost (Aktifleştirme gerekir).' },
   ];
 
   // Achievements (simple)
@@ -292,8 +291,8 @@ const LEVELS = [
   const el = id => document.getElementById(id);
   const shardEl = el('shard');
   const shardCountEl = el('shardCount');
-  const ppsEl = el('pps');
-  const perClickEl = el('perClick');
+  const ppsEl = 1;
+  const perClickEl = 1;
   const buildingsList = el('buildingsList');
   const achievementsList = el('achievementsList');
   const playerLevelEl = el('playerLevel');
@@ -317,8 +316,8 @@ const LEVELS = [
     try{
       localStorage.setItem(SAVE_KEY, JSON.stringify(toSave));
       state.lastSaved = toSave._savedAt;
-      saveTimeEl.textContent = "Saved: " + nowISO();
-    }catch(e){ console.warn("Save failed", e); }
+      saveTimeEl.textContent = "Kayıt Tarihi: " + nowISO();
+    }catch(e){ console.warn("Kayıt işlemi başarısız", e); }
   }
 
   function load(){
@@ -334,25 +333,17 @@ const LEVELS = [
         if(!state.buildings[t.id]) state.buildings[t.id] = {count:0, cost: t.baseCost, level:0};
       });
       state.ppc = state.perClick || 1;
-      saveTimeEl.textContent = "Loaded: " + nowISO();
+      saveTimeEl.textContent = "Yükleniyor: " + nowISO();
       return true;
     }catch(e){
-      console.warn("Load failed", e);
+      console.warn("Yükleme işlemi başarısız", e);
       return false;
     }
   }
 
-  // export clickable (copy JSON)
-  el('exportBtn').addEventListener('click', () => {
-    const data = localStorage.getItem(SAVE_KEY) || "{}";
-    navigator.clipboard?.writeText(data)
-      .then(()=>alert('Save copied to clipboard'))
-      .catch(()=>prompt('Copy save JSON manually', data));
-  });
-
   // hard reset
     el('resetBtn').addEventListener('click', () => {
-    if(!confirm('Hard reset game? This will clear local save.')) return;
+    if(!confirm('Sıfırlama işleminde tüm veriler silinecektir.')) return;
     localStorage.removeItem(SAVE_KEY);
     state = {
         shards:0, totalShards:0, perClick:1, pps:0, level:1,
@@ -494,8 +485,8 @@ function updateOverclockUI(){
         <div style="text-align:right">
           <div class="cost">${fmt(cost)}</div>
           <div style="margin-top:6px">
-            <button id="btn-${t.id}" class="btn" style="font-size:12px">Buy</button>
-            ${t.id === 'overclocker' ? `<button id="act-over" class="btn" style="font-size:12px;margin-left:6px">Activate</button>` : ''}
+            <button id="btn-${t.id}" class="btn" style="font-size:12px">Satın Al</button>
+            ${t.id === 'overclocker' ? `<button id="act-over" class="btn" style="font-size:12px;margin-left:6px">Aktifleştir</button>` : ''}
           </div>
         </div>
       `;
