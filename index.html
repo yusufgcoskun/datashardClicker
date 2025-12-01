@@ -659,7 +659,6 @@ function tick(dtSec){
   shardEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') onClickShard(); });
 
   el('rebootBtn').addEventListener('click', ()=>{
-    if(state.totalShards < 1000) return alert('You need at least 1,000 total shards to perform a System Reboot.');
 
     const reward = Math.floor(Math.sqrt(state.totalShards / 10000)); // tunable
     const keep = { achievements: state.achievements };
