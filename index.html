@@ -94,8 +94,8 @@
   }
 
   /* Animation classes */
-  /*.pop { transform: scale(1.12); transition: transform .08s ease; }
-  .spin { animation: shardSpin 8s linear infinite; }*/
+  .pop { transform: scale(1.12); transition: transform .08s ease; }
+  /*.spin { animation: shardSpin 8s linear infinite; }*/
   /*@keyframes shardSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }*/
 
     #shardImg {
@@ -164,7 +164,7 @@
     <div class="core">
       <div class="shard-wrap" title="Tıkla">
         <div id="shard" tabindex="0" role="button">
-            <img id="shardImg" src="img/lvl-1.png" alt="Shard" style="width:150px;height:auto;pointer-events:none;object-fit: cover;">
+            <img id="shardImg" src="diamond/1.png" alt="Shard" style="width:150px;height:auto;pointer-events:none;object-fit: cover;">
         </div>
       </div>
 
@@ -224,7 +224,7 @@
   const TICK_MS = 100; // game tick
 
   // progression thresholds (shard count thresholds to change level)
-const LEVELS = [
+/*const LEVELS = [
   {
     name: "Data Shard",
     img: "img/lvl-1.png",
@@ -253,8 +253,40 @@ const LEVELS = [
     color1: "#ff8eff",
     color2: "#6bb8ff"
   }
-];
+];*/
 
+  const LEVELS = [
+    // 1-6: Taş (stone) — açık bejden koyu kahverengiye
+    { name: "Stone I", img: "diamond/1.png", threshold: 0, color1: "#f5e8d0", color2: "#e0cfa0" },
+    { name: "Stone II", img: "diamond/2.png", threshold: 1000, color1: "#e8d2b0", color2: "#d0b88a" },
+    { name: "Stone III", img: "diamond/3.png", threshold: 3000, color1: "#d9b689", color2: "#c29e6d" },
+    { name: "Stone IV", img: "diamond/4.png", threshold: 6000, color1: "#c8a06b", color2: "#b1884f" },
+    { name: "Stone V", img: "diamond/5.png", threshold: 10000, color1: "#b1894f", color2: "#97703a" },
+    { name: "Stone VI", img: "diamond/6.png", threshold: 15000, color1: "#8c6231", color2: "#6e4a25" },
+
+    // 7-10: Kömür (coal) — koyu siyah tonları
+    { name: "Coal I", img: "diamond/7.png", threshold: 21000, color1: "#1a1a1a", color2: "#0f0f0f" },
+    { name: "Coal II", img: "diamond/8.png", threshold: 28000, color1: "#151515", color2: "#0b0b0b" },
+    { name: "Coal III", img: "diamond/9.png", threshold: 36000, color1: "#101010", color2: "#050505" },
+    { name: "Coal IV", img: "diamond/10.png", threshold: 45000, color1: "#0c0c0c", color2: "#000000" },
+
+    // 11-12: Mermer (marble) — gri-bej tonları, parlak
+    { name: "Marble I", img: "diamond/11.png", threshold: 55000, color1: "#d9d9d9", color2: "#bfbfbf" },
+    { name: "Marble II", img: "diamond/12.png", threshold: 66000, color1: "#cfcfcf", color2: "#a6a6a6" },
+
+    // 13-14: Altın (gold) — sarı tonları
+    { name: "Gold I", img: "diamond/13.png", threshold: 78000, color1: "#f9d976", color2: "#f39c12" },
+    { name: "Gold II", img: "diamond/14.png", threshold: 91000, color1: "#f5c33c", color2: "#d49f04" },
+
+    // 15-18: Diamond — mavi tonları, parlak
+    { name: "Diamond I", img: "diamond/15.png", threshold: 105000, color1: "#a2eaf7", color2: "#4bc4f7" },
+    { name: "Diamond II", img: "diamond/16.png", threshold: 120000, color1: "#7fdcf6", color2: "#39b1f5" },
+    { name: "Diamond III", img: "diamond/17.png", threshold: 136000, color1: "#5acdf5", color2: "#2197f3" },
+    { name: "Diamond IV", img: "diamond/18.png", threshold: 153000, color1: "#38bdf3", color2: "#0b7cd1" },
+
+    // 19: Son level — özel / en koyu mavi
+    { name: "Ultimate Core", img: "diamond/19.png", threshold: 171000, color1: "#1a7bbf", color2: "#0a3f7a" },
+  ];
 
   // building definitions
   const BUILDING_TEMPLATES = [
@@ -343,14 +375,14 @@ const LEVELS = [
 
   // hard reset
     el('resetBtn').addEventListener('click', () => {
-    if(!confirm('Sıfırlama işleminde tüm veriler silinecektir.')) return;
-    localStorage.removeItem(SAVE_KEY);
-    state = {
-        shards:0, totalShards:0, perClick:1, pps:0, level:1,
-        lastSaved:null, stats:{clicks:0}, buildings:{}, achievements:{}
-    };
-    BUILDING_TEMPLATES.forEach(t => { state.buildings[t.id] = {count:0,cost:t.baseCost,level:0}; });
-    recalcUI();
+      if(!confirm('Sıfırlama işleminde tüm veriler silinecektir.')) return;
+      localStorage.removeItem(SAVE_KEY);
+      state = {
+          shards:0, totalShards:0, perClick:1, pps:0, level:1,
+          lastSaved:null, stats:{clicks:0}, buildings:{}, achievements:{}
+      };
+      BUILDING_TEMPLATES.forEach(t => { state.buildings[t.id] = {count:0,cost:t.baseCost,level:0}; });
+      recalcUI();
     });
 
   // ---------- BUILDINGS UI & LOGIC ----------
@@ -396,6 +428,10 @@ const LEVELS = [
     // small effect for overclocker: store cooldown timestamp
     if(id === 'overclocker'){
       state.buildings.overclocker.lastUsed = state.buildings.overclocker.lastUsed || 0;
+    }
+        // --- EKLENDİ: Extractor alındığında pop loop başlat ---
+    if(id === 'extractor'){
+      startPopLoop(1500);
     }
     recalcUI();
     save();
@@ -548,6 +584,27 @@ function updateOverclockUI(){
     renderAchievements();
   }
 
+  function popAnimation() {
+    shardEl.classList.remove("pop");
+    void shardEl.offsetWidth;     // reflow: animasyonu sıfırlar
+    shardEl.classList.add("pop");
+
+    setTimeout(() => {
+        shardEl.classList.remove("pop");
+    }, 150); // CSS transition süresiyle uyumlu
+}
+  // 7) Level-up efekti (pop animasyonunu koruduk)
+  let popInterval = null;
+
+  function startPopLoop(intervalMs = 1500) {
+      if (popInterval) clearInterval(popInterval);
+
+      popInterval = setInterval(() => {
+          popAnimation();
+      }, intervalMs);
+  }
+
+
   // ---------- LEVELS & SHARD VISUAL ----------
 function updateLevelAndShardVisual() {
     // 1) En yüksek karşılanan seviyeyi bul
@@ -569,6 +626,10 @@ function updateLevelAndShardVisual() {
     const nextReq = LEVELS[nextIdx]?.threshold || LEVELS[LEVELS.length - 1].threshold;
     nextLevelReqEl.textContent = fmt(Math.max(nextReq - state.totalShards, 0));
 
+    // 4) BODY BACKGROUND UPDATE ----------
+    document.body.style.background = `radial-gradient(1200px 800px at 10% 20%, ${current.color1}22, transparent),
+                                      radial-gradient(1200px 800px at 90% 80%, ${current.color2}22, transparent),
+                                      var(--bg)`;
 
     // 6) Görsel: sadece seviye değiştiyse swap yap (fade)
     const img = document.getElementById('shardImg');
@@ -610,9 +671,6 @@ function updateLevelAndShardVisual() {
         shardEl.style.backgroundPosition = "center";
     }
 
-    // 7) Level-up efekti (pop animasyonunu koruduk)
-    shardEl.classList.add('pop');
-    setTimeout(() => shardEl.classList.remove('pop'), 140);
 }
 
   // ---------- GAME TICK ----------
@@ -652,6 +710,7 @@ function tick(dtSec){
 
     shardCountEl.textContent = fmt(state.shards);
     floatText(`+${state.perClick*mult}`, shardEl);
+    popAnimation();
   }  
 
   el('clickBtn').addEventListener('click', onClickShard);
@@ -668,6 +727,14 @@ function tick(dtSec){
       lastSaved: null, stats:{clicks:0}, buildings:{}, achievements:keep.achievements || {}, 
     };
     BUILDING_TEMPLATES.forEach(t => { state.buildings[t.id] = {count:0,cost:t.baseCost,level:0}; });
+    // shard üzerindeki pop classını temizle
+    shardEl.classList.remove('pop');
+
+    // varsa popInterval durdur
+    if(popInterval) {
+        clearInterval(popInterval);
+        popInterval = null;
+    }
     recalcUI();
     save();
   });
