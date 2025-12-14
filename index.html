@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Data Shard Clicker — Prototype</title>
+<title>Diamond Clicker — Prototype</title>
 <style>
   :root{
     --bg:#0b0b10;
@@ -21,6 +21,70 @@
                 var(--bg);
     color:#cfd8e3;
     display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+
+  /* LOGIN OVERLAY (FROSTED GLASS) */
+  .login-screen{
+    position:fixed;
+    inset:0;
+    background:rgba(255, 255, 255, 0.171);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+  }
+
+  .login-card{
+    width:320px;
+    padding:28px;
+    border-radius:16px;
+    background:rgba(15,23,32,.9);
+    border:1px solid var(--glass-border);
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .logo-slot{
+    height:120px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    letter-spacing:1px;
+    color:var(--neon1);
+    background: 
+      linear-gradient(180deg,rgba(255,255,255,.04),transparent) , 
+      url(img/logo.png) center/contain no-repeat;
+  }
+
+  .login-card input{
+    padding:12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0b1220;
+    color:#fff;
+    font-size:14px;
+  }
+
+  .login-card button{
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--accent);
+    color:#031122;
+  }
+
+  /* GAME BACKGROUND (oyuna girince) */
+  body.game-bg{
+    background:
+      url("img/level4-arkaplan.png") center/cover fixed no-repeat;
   }
 
   .container{
@@ -49,12 +113,15 @@
   .title p{margin:0;font-size:12px;color:#9aa6b8}
 
   .core {
-    display:flex;gap:18px;align-items:center;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
   }
 
   /* Shard visual */
   .shard-wrap{
-    width:220px;height:220px;border-radius:16px;background:var(--glass);
+    width:250px;height:220px;border-radius:16px;background:var(--glass);
     display:flex;align-items:center;justify-content:center;position:relative;
     border:1px solid rgba(255,255,255,0.03);
     box-shadow: 0 8px 40px rgba(12,12,20,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
@@ -98,22 +165,64 @@
   /*.spin { animation: shardSpin 8s linear infinite; }*/
   /*@keyframes shardSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }*/
 
-    #shardImg {
-        transition: opacity 1s ease-in-out;
-        opacity: 1;
-        display: block;
-        pointer-events: none;
-        background-color: transparent;
-    }
-    .fade-out { opacity: 0; }
-    .fade-in { opacity: 1; }
+  .fade-out { opacity: 0; }
+  .fade-in { opacity: 1; }
+
+  /* Shard focus / click outline tamamen kapat */
+  #shard,
+  #shard:focus,
+  #shard:active,
+  #shard:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .shard-sprite{
+    width:200px;
+    height:200px;
+    background-image: url("diamond/1.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    pointer-events: auto;
+    user-select: none;
+  }
+
+  /* çatlak katmanı */
+  #crackContainer{
+    width: 200px;
+    height: 200px;
+    inset: 0;
+    pointer-events: none;
+
+    /* 🔥 MASK */
+    -webkit-mask-image: var(--stone-mask);
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+
+    mask-image: var(--stone-mask);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+
+  .crack{
+    position:absolute;
+    inset:0;
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    opacity:1; /* SABİT */
+  }
 
   /* Stats */
-  .stats{margin-left:12px;flex:1;display:flex;flex-direction:column;gap:8px}
+  .stats{margin-left:12px;flex:1;display:flex;flex-direction:column;gap:8px;align-items: center;}
   .big-number{font-size:28px;font-weight:700;color:var(--neon2);text-shadow: 0 6px 30px rgba(179,108,255,0.06)}
   .sub{font-size:12px;color:#9aa6b8}
 
-  .controls{display:flex;gap:10px;margin-top:6px}
   button.btn{
     background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:#dbe9f8;
     cursor:pointer;font-weight:600;font-size:13px;
@@ -152,461 +261,524 @@
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="game">
-    <div class="header">
-      <div class="title">
-        <h1>Data Shard Clicker</h1>
-        <p>Dijital çekirdeğin parçalarını topla, sistemini kur.</p>
-      </div>
-    </div>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="logo-slot"></div>
 
-    <div class="core">
-      <div class="shard-wrap" title="Tıkla">
-        <div id="shard" tabindex="0" role="button">
-            <img id="shardImg" src="diamond/1.png" alt="Shard" style="width:150px;height:auto;pointer-events:none;object-fit: cover;">
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="big-number"><span id="shardCount">0</span> <small style="font-size:12px;color:#9aa6b8">shards</small></div>
-        <div class="sub"></div>
-        <div id="overclockTimer" style="position:absolute;left:50%;transform:translateX(-50%);color:#ffd36c;font-weight:700;font-size:12px;">
-            Overclock: 30s
-        </div>
-
-
-        <div class="controls">
-          <button id="clickBtn" class="btn primary">Tıkla</button>
-          <button id="rebootBtn" class="btn">Sıfırla</button>
-        </div>
-
-        <div style="margin-top:8px;font-size:13px;color:#9aa6b8">
-          Level: <span id="playerLevel">1</span> — Sonraki Level: <span id="nextLevelReq">100</span> shards
-        </div>
-
-      </div>
-    </div>
-
-    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <div class="panel" style="flex:1;min-width:300px">
-        <h3>Yükseltmeler</h3>
-        <div id="buildingsList"></div>
-      </div>
-
-      <div class="panel" style="width:260px">
-        <h3>Başarımlar</h3>
-        <div id="achievementsList" class="achievements"></div>
-        <div style="margin-top:10px">
-          <strong>Save:</strong> auto every 5s — <button id="resetBtn" class="btn">Sıfırla</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div><small id="saveTime">Kayıt Tarihi: —</small></div>
+      <input id="usernameInput" type="text" placeholder="İsmini gir" maxlength="20" />
+      <button id="playBtn">Oyna</button>
     </div>
   </div>
-
-</div>
-
-<script>
-/*
-  Data Shard Clicker - Prototype (single-file)
-  - Clean, commented and easy to extend.
-  - Persistence via localStorage.
-*/
-
-(function(){
-  // ---------- CONFIG ----------
-  const SAVE_KEY = "data_shard_clicker_save_v1";
-  const SAVE_INTERVAL = 1000; // ms
-  const TICK_MS = 100; // game tick
-
-  // progression thresholds (shard count thresholds to change level)
-/*const LEVELS = [
-  {
-    name: "Data Shard",
-    img: "img/lvl-1.png",
-    threshold: 0,
-    color1: "#50e3ff",
-    color2: "#b36cff"
-  },
-  {
-    name: "Software Core",
-    img: "img/lvl-2.png",
-    threshold: 1000,
-    color1: "#6cf",
-    color2: "#a3a3ff"
-  },
-  {
-    name: "System Node",
-    img: "img/lvl-3.png",
-    threshold: 5000,
-    color1: "#66ffcc",
-    color2: "#3399ff"
-  },
-  {
-    name: "Network Matrix",
-    img: "img/lvl-4.png",
-    threshold: 20000,
-    color1: "#ff8eff",
-    color2: "#6bb8ff"
-  }
-];*/
-
-  const LEVELS = [
-    // 1-6: Taş (stone) — açık bejden koyu kahverengiye
-    { name: "Stone I", img: "diamond/1.png", threshold: 0, color1: "#f5e8d0", color2: "#e0cfa0" },
-    { name: "Stone II", img: "diamond/2.png", threshold: 1000, color1: "#e8d2b0", color2: "#d0b88a" },
-    { name: "Stone III", img: "diamond/3.png", threshold: 3000, color1: "#d9b689", color2: "#c29e6d" },
-    { name: "Stone IV", img: "diamond/4.png", threshold: 6000, color1: "#c8a06b", color2: "#b1884f" },
-    { name: "Stone V", img: "diamond/5.png", threshold: 10000, color1: "#b1894f", color2: "#97703a" },
-    { name: "Stone VI", img: "diamond/6.png", threshold: 15000, color1: "#8c6231", color2: "#6e4a25" },
-
-    // 7-10: Kömür (coal) — koyu siyah tonları
-    { name: "Coal I", img: "diamond/7.png", threshold: 21000, color1: "#1a1a1a", color2: "#0f0f0f" },
-    { name: "Coal II", img: "diamond/8.png", threshold: 28000, color1: "#151515", color2: "#0b0b0b" },
-    { name: "Coal III", img: "diamond/9.png", threshold: 36000, color1: "#101010", color2: "#050505" },
-    { name: "Coal IV", img: "diamond/10.png", threshold: 45000, color1: "#0c0c0c", color2: "#000000" },
-
-    // 11-12: Mermer (marble) — gri-bej tonları, parlak
-    { name: "Marble I", img: "diamond/11.png", threshold: 55000, color1: "#d9d9d9", color2: "#bfbfbf" },
-    { name: "Marble II", img: "diamond/12.png", threshold: 66000, color1: "#cfcfcf", color2: "#a6a6a6" },
-
-    // 13-14: Altın (gold) — sarı tonları
-    { name: "Gold I", img: "diamond/13.png", threshold: 78000, color1: "#f9d976", color2: "#f39c12" },
-    { name: "Gold II", img: "diamond/14.png", threshold: 91000, color1: "#f5c33c", color2: "#d49f04" },
-
-    // 15-18: Diamond — mavi tonları, parlak
-    { name: "Diamond I", img: "diamond/15.png", threshold: 105000, color1: "#a2eaf7", color2: "#4bc4f7" },
-    { name: "Diamond II", img: "diamond/16.png", threshold: 120000, color1: "#7fdcf6", color2: "#39b1f5" },
-    { name: "Diamond III", img: "diamond/17.png", threshold: 136000, color1: "#5acdf5", color2: "#2197f3" },
-    { name: "Diamond IV", img: "diamond/18.png", threshold: 153000, color1: "#38bdf3", color2: "#0b7cd1" },
-
-    // 19: Son level — özel / en koyu mavi
-    { name: "Ultimate Core", img: "diamond/19.png", threshold: 171000, color1: "#1a7bbf", color2: "#0a3f7a" },
-  ];
-
-  // building definitions
-  const BUILDING_TEMPLATES = [
-    { id:'extractor', name:'Extractor', baseCost:15, basePps:1, desc:'Saniye başına shard çıkartmayı arttırır.' },
-    { id:'overclocker', name:'Zamanlayıcı (30sn)', baseCost:15, basePps:0, desc:'^0 saniyeliğine boost (Aktifleştirme gerekir).' },
-  ];
-
-  // Achievements (simple)
-  const ACHIEVEMENTS = [
-    {id:'click100', title:'100 Clicks', check: s => s.stats.clicks >= 100},
-    {id:'shard1k', title:'1,000 Shards', check: s => s.totalShards >= 1_000},
-    {id:'firstExtractor', title:'Built: Extractor', check: s => s.buildings.extractor.count >= 1}
-  ];
-
-  // ---------- GAME STATE ----------
-  let state = {
-    shards: 0,
-    totalShards: 0,
-    perClick: 1,
-    pps: 0,
-    level: 1,
-    lastSaved: null,
-    stats: { clicks:0 },
-    buildings: {},
-    achievements: {},
-  };
-
-  // initialize building counts
-  BUILDING_TEMPLATES.forEach(t => {
-    state.buildings[t.id] = { count: 0, cost: t.baseCost, level: 0 };
-  });
-
-  // UI refs
-  const el = id => document.getElementById(id);
-  const shardEl = el('shard');
-  const shardCountEl = el('shardCount');
-  const ppsEl = 1;
-  const perClickEl = 1;
-  const buildingsList = el('buildingsList');
-  const achievementsList = el('achievementsList');
-  const playerLevelEl = el('playerLevel');
-  const nextLevelReqEl = el('nextLevelReq');
-  const saveTimeEl = el('saveTime');
-
-  // ---------- UTIL ----------
-  function fmt(n){
-    //if(n >= 1e12) return (n/1e12).toFixed(2) + "T";
-    //if(n >= 1e9) return (n/1e9).toFixed(2) + "B";
-    //if(n >= 1e6) return (n/1e6).toFixed(2) + "M";
-    //if(n >= 1e3) return (n/1e3).toFixed(2) + "k";
-    return Math.floor(n);
-  }
-
-  function nowISO(){ return new Date().toLocaleString(); }
-
-  // ---------- SAVE / LOAD ----------
-  function save(){
-    const toSave = {...state, _savedAt: Date.now() };
-    try{
-      localStorage.setItem(SAVE_KEY, JSON.stringify(toSave));
-      state.lastSaved = toSave._savedAt;
-      saveTimeEl.textContent = "Kayıt Tarihi: " + nowISO();
-    }catch(e){ console.warn("Kayıt işlemi başarısız", e); }
-  }
-
-  function load(){
-    try{
-      const raw = localStorage.getItem(SAVE_KEY);
-      if(!raw) return false;
-      
-      const s = JSON.parse(raw);
-      // merge minimal safely
-      state = Object.assign(state, s);
-      // ensure buildings exist
-      BUILDING_TEMPLATES.forEach(t => {
-        if(!state.buildings[t.id]) state.buildings[t.id] = {count:0, cost: t.baseCost, level:0};
-      });
-      state.ppc = state.perClick || 1;
-      saveTimeEl.textContent = "Yükleniyor: " + nowISO();
-      return true;
-    }catch(e){
-      console.warn("Yükleme işlemi başarısız", e);
-      return false;
-    }
-  }
-
-  // hard reset
-    el('resetBtn').addEventListener('click', () => {
-      if(!confirm('Sıfırlama işleminde tüm veriler silinecektir.')) return;
-      localStorage.removeItem(SAVE_KEY);
-      state = {
-          shards:0, totalShards:0, perClick:1, pps:0, level:1,
-          lastSaved:null, stats:{clicks:0}, buildings:{}, achievements:{}
-      };
-      BUILDING_TEMPLATES.forEach(t => { state.buildings[t.id] = {count:0,cost:t.baseCost,level:0}; });
-      recalcUI();
-    });
-
-  // ---------- BUILDINGS UI & LOGIC ----------
-  function calcTotalPps(){
-    // base pps from buildings
-    let base = 0;
-    BUILDING_TEMPLATES.forEach(t => {
-      const b = state.buildings[t.id];
-      if(!b) return;
-      // production scales: basePps * count * (1.15^(count-1))
-      const baseP = t.basePps || 0;
-      if(t.id === 'optimizer'){
-        // optimizer is a global percent boost (we'll interpret as +X% per optimizer.count)
-        base += 0; // handled later
-      } else {
-        base += baseP * b.count;
-      }
-    });
-
-    // optimizer modifies by percent
-    const optimizerCount = state.buildings.optimizer?.count || 0;
-    const optimizerBoost = 1 + optimizerCount * 0.05; // each optimizer +5%
-    base *= optimizerBoost;
-
-    state.pps = base;
-    ppsEl.textContent = fmt(base.toFixed(2));
-  }
-
-  //cost oluşturma.
-  function buildCost(templateId){
-    const t = BUILDING_TEMPLATES.find(x=>x.id===templateId);
-    const b = state.buildings[templateId];
-    // simple exponential cost scaling
-    const cost = Math.floor(t.baseCost * Math.pow(1.15, b.count));
-    return cost;
-  }
-
-  function buyBuilding(id){
-    const cost = buildCost(id);
-    if(state.shards < cost) { shakeElement(buildingsList); return; }
-    state.shards -= cost;
-    state.buildings[id].count++;
-    // small effect for overclocker: store cooldown timestamp
-    if(id === 'overclocker'){
-      state.buildings.overclocker.lastUsed = state.buildings.overclocker.lastUsed || 0;
-    }
-        // --- EKLENDİ: Extractor alındığında pop loop başlat ---
-    if(id === 'extractor'){
-      startPopLoop(1500);
-    }
-    recalcUI();
-    save();
-    floatText(`-${fmt(cost)}`, document.querySelector(`#btn-${id}`) || buildingsList);
-    checkAchievements();
-  }
-
-function activateOverclocker(){
-    const b = state.buildings.overclocker;
-    if(!b || b.count <= 0) return alert('You need at least 1 Overclocker.');
-
-    const now = Date.now();
-    if(b.lastUsed && now - b.lastUsed < 2*60*1000) {
-        alert('Overclocker cooldown active (2 min).');
-        return;
-    }
-
-    // **Depodaki tüm overclockerları kullan**
-    const useCount = b.count;
-    b.count = 0; // hepsini kullandık
-    b.lastUsed = now;
-
-    // Overclock çarpanı ve bitiş süresi
-    state._tempOverclockUntil = now + 30*1000; // 30 saniye
-    state._tempOverclockMultiplier = 5 * useCount; // toplam çarpan
-
-    recalcUI();
-    floatText(`Overclock x${state._tempOverclockMultiplier} (30s)`, shardEl);
-    save();
-
-    updateOverclockUI();
-
-    // Timer güncellemesi
-    if(!state._overclockInterval){
-        state._overclockInterval = setInterval(() => {
-            updateOverclockUI();
-            if(!state._tempOverclockUntil || Date.now() > state._tempOverclockUntil) {
-                clearInterval(state._overclockInterval);
-                state._overclockInterval = null;
-                state._tempOverclockMultiplier = 1; // sıfırla
-                state._tempOverclockUntil = null;
-                updateOverclockUI();
-            }
-        }, 1000);
-    }
-}
-
-// Tıklama ve otomatik üretim fonksiyonunda
-function getOverclockMultiplier(){
-    if(state._tempOverclockUntil && Date.now() < state._tempOverclockUntil){
-        return state._tempOverclockMultiplier || 1;
-    }
-    return 1;
-}
-
-// Overclock timer UI
-function updateOverclockUI(){
-    const timerEl = el('overclockTimer');
-    if(state._tempOverclockUntil){
-        const remaining = Math.ceil((state._tempOverclockUntil - Date.now())/1000);
-        if(remaining > 0){
-            timerEl.textContent = `Overclock: ${remaining}s`;
-            timerEl.style.display = 'block';
-        } else {
-            timerEl.style.display = 'none';
-            state._tempOverclockUntil = null;
-        }
-    } else {
-        timerEl.style.display = 'none';
-    }
-}
-
-  // ---------- UI Rendering ----------
-  function renderBuildings(){
-    buildingsList.innerHTML = "";
-    BUILDING_TEMPLATES.forEach(t => {
-      const count = state.buildings[t.id]?.count || 0;
-      const cost = buildCost(t.id);
-      const div = document.createElement('div');
-      div.className = 'building';
-      div.innerHTML = `
-        <div style="width:56px;height:48px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);display:grid;place-items:center;font-weight:700;color:#fff">${t.name[0]}</div>
-        <div class="info">
-          <div class="name">${t.name} <span style="color:#9aa6b8;font-weight:600;font-size:12px">x${count}</span></div>
-          <div class="meta">${t.desc}</div>
+  <div class="container">
+    <div class="game">
+      <div class="header">
+        <div class="title">
+          <h1>Diamond Clicker</h1>
+          <p>Dijital çekirdeğin parçalarını topla, sistemini kur.</p>
         </div>
-        <div style="text-align:right">
-          <div class="cost">${fmt(cost)}</div>
-          <div style="margin-top:6px">
-            <button id="btn-${t.id}" class="btn" style="font-size:12px">Satın Al</button>
-            ${t.id === 'overclocker' ? `<button id="act-over" class="btn" style="font-size:12px;margin-left:6px">Aktifleştir</button>` : ''}
+        <div class="title">
+          <h1>Diamond Clicker</h1>
+          <p id="welcomeText">Dijital çekirdeğin parçalarını topla.</p>
+        </div>
+      </div>
+
+      <div class="core">
+        <div class="shard-wrap" title="Tıkla" id="shardWrapper">
+          <div id="shard" tabindex="0" role="button" class="shard-sprite">
+             <div id="crackContainer"></div>
           </div>
         </div>
-      `;
-      buildingsList.appendChild(div);
 
-      document.getElementById(`btn-${t.id}`).addEventListener('click', ()=>buyBuilding(t.id));
-      if(t.id === 'overclocker'){
-        const act = div.querySelector('#act-over');
-        act.addEventListener('click', activateOverclocker);
+        <div class="stats">
+          <div class="big-number"><span id="shardCount">0</span> <small style="font-size:12px;color:#9aa6b8">shards</small></div>
+          <div class="sub"></div>
+          <div id="overclockTimer" style="position:absolute;left:50%;transform:translateX(-50%);color:#ffd36c;font-weight:700;font-size:12px;">
+              Overclock: 30s
+          </div>
+
+
+          <div class="controls">
+            <button id="rebootBtn" class="btn">Sıfırla</button>
+          </div>
+
+          <div style="margin-top:8px;font-size:13px;color:#9aa6b8">
+            Level: <span id="playerLevel">1</span> — Sonraki Level: <span id="nextLevelReq">100</span> diamond
+          </div>
+
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <div class="panel" style="flex:1;min-width:300px">
+          <h3>Yükseltmeler</h3>
+          <div id="buildingsList"></div>
+        </div>
+
+        <div class="panel" style="width:260px">
+          <h3>Başarımlar</h3>
+          <div id="achievementsList" class="achievements"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div><small id="saveTime">Kayıt Tarihi: —</small></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+
+    const USER_KEY = "data_shard_username";
+
+    const loginScreen = document.getElementById("loginScreen");
+    const playBtn = document.getElementById("playBtn");
+    const usernameInput = document.getElementById("usernameInput");
+    const welcomeText = document.getElementById("welcomeText");
+    const shard = document.getElementById("shard");
+
+    shard.addEventListener("contextmenu", e => {
+      e.preventDefault();
+    });
+    function enterGame(username){
+      localStorage.setItem(USER_KEY, username);
+      loginScreen.style.display = "none";
+      document.body.classList.add("game-bg");
+
+      if(welcomeText){
+        welcomeText.textContent = `Hoş geldin ${username} 👋`;
       }
-    });
-  }
+    }
 
-  // achievements UI
-  function renderAchievements(){
-    achievementsList.innerHTML = '';
-    ACHIEVEMENTS.forEach(a=>{
-      const unlocked = !!state.achievements[a.id];
-      const d = document.createElement('div');
-      d.className = 'ach';
-      d.style.opacity = unlocked ? '1' : '.35';
-      d.textContent = `${unlocked ? '✓ ' : ''}${a.title}`;
-      achievementsList.appendChild(d);
-    });
-  }
+    function backToLogin(){
+      // username sil
+      localStorage.removeItem(USER_KEY);
 
-  // visual helpers
-  function floatText(msg, nearEl){
-    const f = document.createElement('div');
-    f.textContent = msg;
-    Object.assign(f.style,{
-      position:'absolute',left:0,top:0,color:'#fff',background:'transparent',fontWeight:800,pointerEvents:'none',
-      transform:'translate(-50%,-50%)',zIndex:9999
-    });
-    document.body.appendChild(f);
-    // position near center
-    const rect = (nearEl instanceof Element) ? nearEl.getBoundingClientRect() : nearEl.getClientRects()[0];
-    f.style.left = (rect.left + rect.width/2) + 'px';
-    f.style.top = (rect.top + rect.height/2 - 10) + 'px';
-    f.style.opacity = '1';
-    f.animate([{transform:'translateY(0px)',opacity:1},{transform:'translateY(-60px)',opacity:0}], {duration:900, easing:'cubic-bezier(.2,.8,.2,1)'});
-    setTimeout(()=>f.remove(),900);
-  }
-  function shakeElement(elm){
-    elm.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:300});
-  }
+      // login ekranını aç
+      loginScreen.style.display = "flex";
+      usernameInput.value = "";
 
-  // ---------- ACHIEVEMENTS ----------
-  function checkAchievements(){
-    ACHIEVEMENTS.forEach(a=>{
-      if(state.achievements[a.id]) return;
+      // güvenli tam reset için reload
+      setTimeout(() => location.reload(), 50);
+    }
+
+    playBtn.addEventListener("click", () => {
+      const name = usernameInput.value.trim();
+      if(!name) return alert("Lütfen ismini gir.");
+      enterGame(name);
+    });
+
+    // Daha önce giriş yapılmışsa
+    const savedUser = localStorage.getItem(USER_KEY);
+    if(savedUser){
+      enterGame(savedUser);
+    }
+
+  (function(){
+    // ---------- CONFIG ----------
+    const SAVE_KEY = "data_shard_clicker_save_v1";
+    const SAVE_INTERVAL = 1000; // ms
+    const TICK_MS = 100; // game tick
+
+    const CRACK_IMAGES = [
+      'img/cracks/1.png',
+      'img/cracks/2.png',
+      'img/cracks/3.png',
+      'img/cracks/4.png',
+    ];
+    let activeCracks = [];
+    // progression thresholds (shard count thresholds to change level)
+    const LEVELS = [
+      // 1-6: Taş (stone) — açık bejden koyu kahverengiye
+      { name: "Stone I", img: "diamond/1.png", threshold: 0, color1: "#f5e8d0", color2: "#e0cfa0" },
+      { name: "Stone II", img: "diamond/2.png", threshold: 1000, color1: "#e8d2b0", color2: "#d0b88a" },
+      { name: "Stone III", img: "diamond/3.png", threshold: 3000, color1: "#d9b689", color2: "#c29e6d" },
+      { name: "Stone IV", img: "diamond/4.png", threshold: 6000, color1: "#c8a06b", color2: "#b1884f" },
+      { name: "Stone V", img: "diamond/5.png", threshold: 10000, color1: "#b1894f", color2: "#97703a" },
+      { name: "Stone VI", img: "diamond/6.png", threshold: 15000, color1: "#8c6231", color2: "#6e4a25" },
+
+      // 7-10: Kömür (coal) — koyu siyah tonları
+      { name: "Coal I", img: "diamond/7.png", threshold: 21000, color1: "#1a1a1a", color2: "#0f0f0f" },
+      { name: "Coal II", img: "diamond/8.png", threshold: 28000, color1: "#151515", color2: "#0b0b0b" },
+      { name: "Coal III", img: "diamond/9.png", threshold: 36000, color1: "#101010", color2: "#050505" },
+      { name: "Coal IV", img: "diamond/10.png", threshold: 45000, color1: "#0c0c0c", color2: "#000000" },
+
+      // 11-12: Mermer (marble) — gri-bej tonları, parlak
+      { name: "Marble I", img: "diamond/11.png", threshold: 55000, color1: "#d9d9d9", color2: "#bfbfbf" },
+      { name: "Marble II", img: "diamond/12.png", threshold: 66000, color1: "#cfcfcf", color2: "#a6a6a6" },
+
+      // 13-14: Altın (gold) — sarı tonları
+      { name: "Gold I", img: "diamond/13.png", threshold: 78000, color1: "#f9d976", color2: "#f39c12" },
+      { name: "Gold II", img: "diamond/14.png", threshold: 91000, color1: "#f5c33c", color2: "#d49f04" },
+
+      // 15-18: Diamond — mavi tonları, parlak
+      { name: "Diamond I", img: "diamond/15.png", threshold: 105000, color1: "#a2eaf7", color2: "#4bc4f7" },
+      { name: "Diamond II", img: "diamond/16.png", threshold: 120000, color1: "#7fdcf6", color2: "#39b1f5" },
+      { name: "Diamond III", img: "diamond/17.png", threshold: 136000, color1: "#5acdf5", color2: "#2197f3" },
+      { name: "Diamond IV", img: "diamond/18.png", threshold: 153000, color1: "#38bdf3", color2: "#0b7cd1" },
+
+      // 19: Son level — özel / en koyu mavi
+      { name: "Ultimate Core", img: "diamond/19.png", threshold: 171000, color1: "#1a7bbf", color2: "#0a3f7a" },
+    ];
+
+    function addCrack(){
+      const container = document.getElementById('crackContainer');
+
+      // Rastgele crack seç
+      const img = CRACK_IMAGES[Math.floor(Math.random() * CRACK_IMAGES.length)];
+
+      // Aynı crack zaten var mı?
+      const existing = activeCracks.find(c => c.img === img);
+
+      if (existing) {
+        // 🔄 VARSA: sadece transform değiştir
+        existing.el.style.transform = `
+          rotate(${Math.random()*360}deg)
+          scale(${0.85 + Math.random()*0.3})
+        `;
+        return;
+      }
+
+      // ❌ Yeni crack ama limit doluysa ekleme
+      if (activeCracks.length >= 4) return;
+
+      // ✅ Yeni crack oluştur
+      const crack = document.createElement('div');
+      crack.className = 'crack';
+      crack.style.backgroundImage = `url('${img}')`;
+      crack.style.transform = `
+        rotate(${Math.random()*360}deg)
+        scale(${0.85 + Math.random()*0.3})
+      `;
+
+      container.appendChild(crack);
+
+      activeCracks.push({
+        img,
+        el: crack
+      });
+    }
+
+    function resetCracks(){
+      const container = document.getElementById('crackContainer');
+      container.innerHTML = '';
+      activeCracks = [];
+    }
+
+    // building definitions
+    const BUILDING_TEMPLATES = [
+      { id:'extractor', name:'Extractor', baseCost:15, basePps:1, desc:'Saniye başına diamond çıkartmayı arttırır.' },
+      { id:'overclocker', name:'Zamanlayıcı (30sn)', baseCost:15, basePps:0, desc:'30 saniyeliğine boost (Aktifleştirme gerekir).' },
+    ];
+
+    // Achievements (simple)
+    const ACHIEVEMENTS = [
+      {id:'click100', title:'100 Kere Tıkla', check: s => s.stats.clicks >= 100},
+      {id:'shard1k', title:'1,000 Diamond Topla', check: s => s.totalShards >= 1_000},
+      {id:'firstExtractor', title:'Built: Extractor', check: s => s.buildings.extractor.count >= 1}
+    ];
+
+    // ---------- GAME STATE ----------
+    let state = {
+      shards: 0,
+      totalShards: 0,
+      perClick: 1,
+      pps: 0,
+      level: 1,
+      lastSaved: null,
+      stats: { clicks:0 },
+      buildings: {},
+      achievements: {},
+    };
+
+    // initialize building counts
+    BUILDING_TEMPLATES.forEach(t => {
+      state.buildings[t.id] = { count: 0, cost: t.baseCost, level: 0 };
+    });
+
+    // UI refs
+    const el = id => document.getElementById(id);
+    const shardEl = el('shard');
+    const shardCountEl = el('shardCount');
+    const ppsEl = 1;
+    const perClickEl = 1;
+    const buildingsList = el('buildingsList');
+    const achievementsList = el('achievementsList');
+    const playerLevelEl = el('playerLevel');
+    const nextLevelReqEl = el('nextLevelReq');
+    const saveTimeEl = el('saveTime');
+
+    // ---------- UTIL ----------
+    function fmt(n){
+      //if(n >= 1e12) return (n/1e12).toFixed(2) + "T";
+      //if(n >= 1e9) return (n/1e9).toFixed(2) + "B";
+      //if(n >= 1e6) return (n/1e6).toFixed(2) + "M";
+      //if(n >= 1e3) return (n/1e3).toFixed(2) + "k";
+      return Math.floor(n);
+    }
+
+    function nowISO(){ return new Date().toLocaleString(); }
+
+    // ---------- SAVE / LOAD ----------
+    function save(){
+      const toSave = {...state, _savedAt: Date.now() };
       try{
-        if(a.check(state)) {
-          state.achievements[a.id]=true;
-          floatText('Achievement: ' + a.title, shardEl);
+        localStorage.setItem(SAVE_KEY, JSON.stringify(toSave));
+        state.lastSaved = toSave._savedAt;
+        saveTimeEl.textContent = "Kayıt Tarihi: " + nowISO();
+      }catch(e){ console.warn("Kayıt işlemi başarısız", e); }
+    }
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(SAVE_KEY);
+        if(!raw) return false;
+        
+        const s = JSON.parse(raw);
+        // merge minimal safely
+        state = Object.assign(state, s);
+        // ensure buildings exist
+        BUILDING_TEMPLATES.forEach(t => {
+          if(!state.buildings[t.id]) state.buildings[t.id] = {count:0, cost: t.baseCost, level:0};
+        });
+        state.ppc = state.perClick || 1;
+        saveTimeEl.textContent = "Yükleniyor: " + nowISO();
+        return true;
+      }catch(e){
+        console.warn("Yükleme işlemi başarısız", e);
+        return false;
+      }
+    }
+
+    // ---------- BUILDINGS UI & LOGIC ----------
+    function calcTotalPps(){
+      // base pps from buildings
+      let base = 0;
+      BUILDING_TEMPLATES.forEach(t => {
+        const b = state.buildings[t.id];
+        if(!b) return;
+        // production scales: basePps * count * (1.15^(count-1))
+        const baseP = t.basePps || 0;
+        if(t.id === 'optimizer'){
+          // optimizer is a global percent boost (we'll interpret as +X% per optimizer.count)
+          base += 0; // handled later
+        } else {
+          base += baseP * b.count;
         }
-      }catch(e){}
-    });
-    renderAchievements();
+      });
+
+      // optimizer modifies by percent
+      const optimizerCount = state.buildings.optimizer?.count || 0;
+      const optimizerBoost = 1 + optimizerCount * 0.05; // each optimizer +5%
+      base *= optimizerBoost;
+
+      state.pps = base;
+      ppsEl.textContent = fmt(base.toFixed(2));
+    }
+
+    //cost oluşturma.
+    function buildCost(templateId){
+      const t = BUILDING_TEMPLATES.find(x=>x.id===templateId);
+      const b = state.buildings[templateId];
+      // simple exponential cost scaling
+      const cost = Math.floor(t.baseCost * Math.pow(1.15, b.count));
+      return cost;
+    }
+
+    function buyBuilding(id){
+      const cost = buildCost(id);
+      if(state.shards < cost) { shakeElement(buildingsList); return; }
+      state.shards -= cost;
+      state.buildings[id].count++;
+      // small effect for overclocker: store cooldown timestamp
+      if(id === 'overclocker'){
+        state.buildings.overclocker.lastUsed = state.buildings.overclocker.lastUsed || 0;
+      }
+          // --- EKLENDİ: Extractor alındığında pop loop başlat ---
+      if(id === 'extractor'){
+        startPopLoop(1500);
+      }
+      recalcUI();
+      save();
+      floatText(`-${fmt(cost)}`, document.querySelector(`#btn-${id}`) || buildingsList);
+      checkAchievements();
+    }
+
+  function activateOverclocker(){
+      const b = state.buildings.overclocker;
+      if(!b || b.count <= 0) return alert('You need at least 1 Overclocker.');
+
+      const now = Date.now();
+      if(b.lastUsed && now - b.lastUsed < 2*60*1000) {
+          alert('Overclocker cooldown active (2 min).');
+          return;
+      }
+
+      // **Depodaki tüm overclockerları kullan**
+      const useCount = b.count;
+      b.count = 0; // hepsini kullandık
+      b.lastUsed = now;
+
+      // Overclock çarpanı ve bitiş süresi
+      state._tempOverclockUntil = now + 30*1000; // 30 saniye
+      state._tempOverclockMultiplier = 5 * useCount; // toplam çarpan
+
+      recalcUI();
+      floatText(`Zamanlayıcı x${state._tempOverclockMultiplier} (30s)`, shardEl);
+      save();
+
+      updateOverclockUI();
+
+      // Timer güncellemesi
+      if(!state._overclockInterval){
+          state._overclockInterval = setInterval(() => {
+              updateOverclockUI();
+              if(!state._tempOverclockUntil || Date.now() > state._tempOverclockUntil) {
+                  clearInterval(state._overclockInterval);
+                  state._overclockInterval = null;
+                  state._tempOverclockMultiplier = 1; // sıfırla
+                  state._tempOverclockUntil = null;
+                  updateOverclockUI();
+              }
+          }, 1000);
+      }
   }
 
-  function popAnimation() {
-    shardEl.classList.remove("pop");
-    void shardEl.offsetWidth;     // reflow: animasyonu sıfırlar
-    shardEl.classList.add("pop");
-
-    setTimeout(() => {
-        shardEl.classList.remove("pop");
-    }, 150); // CSS transition süresiyle uyumlu
-}
-  // 7) Level-up efekti (pop animasyonunu koruduk)
-  let popInterval = null;
-
-  function startPopLoop(intervalMs = 1500) {
-      if (popInterval) clearInterval(popInterval);
-
-      popInterval = setInterval(() => {
-          popAnimation();
-      }, intervalMs);
+  // Tıklama ve otomatik üretim fonksiyonunda
+  function getOverclockMultiplier(){
+      if(state._tempOverclockUntil && Date.now() < state._tempOverclockUntil){
+          return state._tempOverclockMultiplier || 1;
+      }
+      return 1;
   }
 
+  // Overclock timer UI
+  function updateOverclockUI(){
+      const timerEl = el('overclockTimer');
+      if(state._tempOverclockUntil){
+          const remaining = Math.ceil((state._tempOverclockUntil - Date.now())/1000);
+          if(remaining > 0){
+              timerEl.textContent = `Overclock: ${remaining}s`;
+              timerEl.style.display = 'block';
+          } else {
+              timerEl.style.display = 'none';
+              state._tempOverclockUntil = null;
+          }
+      } else {
+          timerEl.style.display = 'none';
+      }
+  }
 
-  // ---------- LEVELS & SHARD VISUAL ----------
-function updateLevelAndShardVisual() {
+    // ---------- UI Rendering ----------
+    function renderBuildings(){
+      buildingsList.innerHTML = "";
+      BUILDING_TEMPLATES.forEach(t => {
+        const count = state.buildings[t.id]?.count || 0;
+        const cost = buildCost(t.id);
+        const div = document.createElement('div');
+        div.className = 'building';
+        div.innerHTML = `
+          <div style="width:56px;height:48px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);display:grid;place-items:center;font-weight:700;color:#fff">${t.name[0]}</div>
+          <div class="info">
+            <div class="name">${t.name} <span style="color:#9aa6b8;font-weight:600;font-size:12px">x${count}</span></div>
+            <div class="meta">${t.desc}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="cost">${fmt(cost)}</div>
+            <div style="margin-top:6px">
+              <button id="btn-${t.id}" class="btn" style="font-size:12px">Satın Al</button>
+              ${t.id === 'overclocker' ? `<button id="act-over" class="btn" style="font-size:12px;margin-left:6px">Aktifleştir</button>` : ''}
+            </div>
+          </div>
+        `;
+        buildingsList.appendChild(div);
+
+        document.getElementById(`btn-${t.id}`).addEventListener('click', ()=>buyBuilding(t.id));
+        if(t.id === 'overclocker'){
+          const act = div.querySelector('#act-over');
+          act.addEventListener('click', activateOverclocker);
+        }
+      });
+    }
+
+    // achievements UI
+    function renderAchievements(){
+      achievementsList.innerHTML = '';
+      ACHIEVEMENTS.forEach(a=>{
+        const unlocked = !!state.achievements[a.id];
+        const d = document.createElement('div');
+        d.className = 'ach';
+        d.style.opacity = unlocked ? '1' : '.35';
+        d.textContent = `${unlocked ? '✓ ' : ''}${a.title}`;
+        achievementsList.appendChild(d);
+      });
+    }
+
+    // visual helpers
+    function floatText(msg, nearEl){
+      const f = document.createElement('div');
+      f.textContent = msg;
+      Object.assign(f.style,{
+        position:'absolute',left:0,top:0,color:'#fff',background:'transparent',fontWeight:800,pointerEvents:'none',
+        transform:'translate(-50%,-50%)',zIndex:9999
+      });
+      document.body.appendChild(f);
+      // position near center
+      const rect = (nearEl instanceof Element) ? nearEl.getBoundingClientRect() : nearEl.getClientRects()[0];
+      f.style.left = (rect.left + rect.width/2) + 'px';
+      f.style.top = (rect.top + rect.height/2 - 10) + 'px';
+      f.style.opacity = '1';
+      f.animate([{transform:'translateY(0px)',opacity:1},{transform:'translateY(-60px)',opacity:0}], {duration:900, easing:'cubic-bezier(.2,.8,.2,1)'});
+      setTimeout(()=>f.remove(),900);
+    }
+    function shakeElement(elm){
+      elm.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:300});
+    }
+
+    // ---------- ACHIEVEMENTS ----------
+    function checkAchievements(){
+      ACHIEVEMENTS.forEach(a=>{
+        if(state.achievements[a.id]) return;
+        try{
+          if(a.check(state)) {
+            state.achievements[a.id]=true;
+            floatText('Başarım: ' + a.title, shardEl);
+          }
+        }catch(e){}
+      });
+      renderAchievements();
+    }
+
+    function popAnimation() {
+      shardEl.classList.remove("pop");
+      void shardEl.offsetWidth;     // reflow: animasyonu sıfırlar
+      shardEl.classList.add("pop");
+
+      setTimeout(() => {
+          shardEl.classList.remove("pop");
+      }, 150); // CSS transition süresiyle uyumlu
+  }
+    // 7) Level-up efekti (pop animasyonunu koruduk)
+    let popInterval = null;
+
+    function startPopLoop(intervalMs = 1500) {
+        if (popInterval) clearInterval(popInterval);
+
+        popInterval = setInterval(() => {
+            popAnimation();
+        }, intervalMs);
+    }
+
+  function setStoneImage(src){
+    const shard = document.getElementById('shard');
+    const wrapper = document.getElementById('shardWrapper');
+
+    shard.style.backgroundImage = `url('${src}')`;
+    wrapper.style.setProperty('--stone-mask', `url('${src}')`);
+  }
+    // ---------- LEVELS & SHARD VISUAL ----------
+  function updateLevelAndShardVisual() {
     // 1) En yüksek karşılanan seviyeyi bul
     let current = LEVELS[0];
     for (let i = LEVELS.length - 1; i >= 0; i--) {
@@ -626,174 +798,173 @@ function updateLevelAndShardVisual() {
     const nextReq = LEVELS[nextIdx]?.threshold || LEVELS[LEVELS.length - 1].threshold;
     nextLevelReqEl.textContent = fmt(Math.max(nextReq - state.totalShards, 0));
 
-    // 4) BODY BACKGROUND UPDATE ----------
-    document.body.style.background = `radial-gradient(1200px 800px at 10% 20%, ${current.color1}22, transparent),
-                                      radial-gradient(1200px 800px at 90% 80%, ${current.color2}22, transparent),
-                                      var(--bg)`;
+    //4) crack sıfırlama
+    const oldLevel = state._lastLevel || 1;
+    if (oldLevel !== levelIndex) {
+      resetCracks();
+      state._lastLevel = levelIndex;
+    }
 
     // 6) Görsel: sadece seviye değiştiyse swap yap (fade)
-    const img = document.getElementById('shardImg');
+
     const shardDiv = document.getElementById('shard');
-    if (img) {
-        const newSrc = current.img;
+    const newSrc = current.img;
 
-        // Eğer daha önce bir src kaydedilmemişse (ilk yükleme) -> direkt ayarla
-        if (!img.dataset.currentSrc) {
-            img.src = newSrc;
-            img.dataset.currentSrc = newSrc;
-            img.classList.remove('fade-out');
-            img.classList.add('fade-in');
-            shardDiv.classList.remove('filter');
-        } else if (img.dataset.currentSrc !== newSrc) {
-            // gerçekten değişmişse fade out -> değiştir -> fade in
-            img.classList.remove('fade-in');
-            img.classList.add('fade-out');
-            shardDiv.classList.remove('filter');
+    if (shardDiv.dataset.currentBg !== newSrc) {
+      shardDiv.classList.add('fade-out');
 
-            // timeout CSS transition süresiyle eşleşmeli (.5s)
-            setTimeout(() => {
-                img.src = newSrc;
-                img.dataset.currentSrc = newSrc;
+      setTimeout(() => {
+        setStoneImage(current.img);
+        shardDiv.dataset.currentBg = newSrc;
 
-                // küçük gecikme sonra fade-in
-                requestAnimationFrame(() => {
-                    img.classList.remove('fade-out');
-                    img.classList.add('fade-in');
-                });
-            }, 500);
-        }
-        // temizle olası backgroundImage kullanımını kaldır (eski kod kalıntısı varsa)
-        shardEl.style.backgroundImage = 'none';
-    } else {
-        // Eğer img yoksa (eski markup background-image kullanıyorsa) fallback: background olarak ayarla (anında)
-        shardEl.style.backgroundImage = `url('${current.img}')`;
-        shardEl.style.backgroundSize = "cover";
-        shardEl.style.backgroundPosition = "center";
+        requestAnimationFrame(() => {
+          shardDiv.classList.remove('fade-out');
+          shardDiv.classList.add('fade-in');
+        });
+      }, 300);
     }
 
-}
+    state._lastLevel = state._lastLevel || levelIndex;
 
-  // ---------- GAME TICK ----------
-function tick(dtSec){
-    calcTotalPps();
+  }
 
-    let overclockMult = state._tempOverclockMultiplier || 1;
-    const now = Date.now();
-    if(state._tempOverclockUntil && now < state._tempOverclockUntil){
-        overclockMult = state._tempOverclockMultiplier || 1;
-    } else {
-        state._tempOverclockUntil = null; // süre bitince sıfırla
-    }
+    // ---------- GAME TICK ----------
+  function tick(dtSec){
+      calcTotalPps();
 
-    const delta = state.pps * overclockMult * dtSec;
-    if(delta > 0){
-      state.shards += delta;
-      state.totalShards += delta;
-    }
+      let overclockMult = state._tempOverclockMultiplier || 1;
+      const now = Date.now();
+      if(state._tempOverclockUntil && now < state._tempOverclockUntil){
+          overclockMult = state._tempOverclockMultiplier || 1;
+      } else {
+          state._tempOverclockUntil = null; // süre bitince sıfırla
+      }
 
-    // UI güncellemeleri
-    shardCountEl.textContent = fmt(state.shards);
-    perClickEl.textContent = fmt(state.perClick);
-    ppsEl.textContent = fmt((state.pps * overclockMult).toFixed(2));
+      const delta = state.pps * overclockMult * dtSec;
+      if(delta > 0){
+        state.shards += delta;
+        state.totalShards += delta;
+      }
 
-    // overclock timer
-    updateOverclockUI();
-    updateLevelAndShardVisual();
-}
+      // UI güncellemeleri
+      shardCountEl.textContent = fmt(state.shards);
+      perClickEl.textContent = fmt(state.perClick);
+      ppsEl.textContent = fmt((state.pps * overclockMult).toFixed(2));
 
-  // ---------- INTERACTIONS ----------
-  // clicking the shard
-  function onClickShard(){
-    const mult = getOverclockMultiplier();
-    state.shards += state.perClick * mult;
-    state.totalShards += state.perClick * mult;
+      // overclock timer
+      updateOverclockUI();
+      updateLevelAndShardVisual();
+  }
 
-    shardCountEl.textContent = fmt(state.shards);
-    floatText(`+${state.perClick*mult}`, shardEl);
-    popAnimation();
-  }  
+    // ---------- INTERACTIONS ----------
+    // clicking the shard
+    function onClickShard(){
+      const mult = getOverclockMultiplier();
+      state.shards += state.perClick * mult;
+      state.totalShards += state.perClick * mult;
 
-  el('clickBtn').addEventListener('click', onClickShard);
-  shardEl.addEventListener('click', onClickShard);
-  shardEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') onClickShard(); });
+      shardCountEl.textContent = fmt(state.shards);
+      floatText(`+${state.perClick*mult}`, shardEl);
+      popAnimation();
+      addCrack();
+    }  
 
-  el('rebootBtn').addEventListener('click', ()=>{
+    shardEl.addEventListener('click', onClickShard);
+    shardEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') onClickShard(); });
 
-    const reward = Math.floor(Math.sqrt(state.totalShards / 10000)); // tunable
-    const keep = { achievements: state.achievements };
-    localStorage.removeItem(SAVE_KEY);
-    state = {
-      shards:0, totalShards:0, perClick:1, pps:0, level:1,
-      lastSaved: null, stats:{clicks:0}, buildings:{}, achievements:keep.achievements || {}, 
-    };
-    BUILDING_TEMPLATES.forEach(t => { state.buildings[t.id] = {count:0,cost:t.baseCost,level:0}; });
-    // shard üzerindeki pop classını temizle
-    shardEl.classList.remove('pop');
+    el('rebootBtn').addEventListener('click', ()=>{
 
-    // varsa popInterval durdur
-    if(popInterval) {
+      const reward = Math.floor(Math.sqrt(state.totalShards / 10000));
+      const keep = { achievements: state.achievements };
+
+      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem(USER_KEY);
+
+      state = {
+        shards:0,
+        totalShards:0,
+        perClick:1,
+        pps:0,
+        level:1,
+        lastSaved:null,
+        stats:{clicks:0},
+        buildings:{},
+        achievements: keep.achievements || {},
+      };
+
+      BUILDING_TEMPLATES.forEach(t => {
+        state.buildings[t.id] = {count:0, cost:t.baseCost, level:0};
+      });
+
+      shardEl.classList.remove('pop');
+
+      if(popInterval){
         clearInterval(popInterval);
         popInterval = null;
-    }
-    recalcUI();
-    save();
-  });
+      }
 
-  // ---------- RE-CALC UI ----------
-  function recalcUI(){
-    // update building costs
-    renderBuildings();
-    calcTotalPps();
-    shardCountEl.textContent = fmt(state.shards);
-    perClickEl.textContent = fmt(state.perClick);
-    ppsEl.textContent = fmt(state.pps.toFixed(2));
-    playerLevelEl.textContent = state.level;
-    renderAchievements();
-  }
+      recalcUI();
+      save();
 
-  // ---------- AUTO SAVE ----------
-  setInterval(save, SAVE_INTERVAL);
-
-  // ---------- GAME LOOP ----------
-  let lastTick = performance.now();
-  function loop(ts){
-    const dt = (ts - lastTick);
-    if(dt >= TICK_MS){
-      tick(dt/1000);
-      lastTick = ts;
-    }
-    requestAnimationFrame(loop);
-  }
-
-  // ---------- INITIALIZE ----------
-  (function init(){
-    // try load
-    load();
-
-    // ensure building entries exist
-    BUILDING_TEMPLATES.forEach(t => {
-      if(!state.buildings[t.id]) state.buildings[t.id] = {count:0,cost:t.baseCost,level:0};
+      // LOGIN'E DÖN
+      backToLogin();
     });
 
-    // initial UI
-    renderBuildings();
-    renderAchievements();
-    recalcUI();
+    // ---------- RE-CALC UI ----------
+    function recalcUI(){
+      // update building costs
+      renderBuildings();
+      calcTotalPps();
+      shardCountEl.textContent = fmt(state.shards);
+      perClickEl.textContent = fmt(state.perClick);
+      ppsEl.textContent = fmt(state.pps.toFixed(2));
+      playerLevelEl.textContent = state.level;
+      renderAchievements();
+    }
 
-    // auto save timestamp display
-    saveTimeEl.textContent = "Loaded: " + nowISO();
+    // ---------- AUTO SAVE ----------
+    setInterval(save, SAVE_INTERVAL);
 
-    // set up save interval (already set) and start loop
-    requestAnimationFrame(loop);
+    // ---------- GAME LOOP ----------
+    let lastTick = performance.now();
+    function loop(ts){
+      const dt = (ts - lastTick);
+      if(dt >= TICK_MS){
+        tick(dt/1000);
+        lastTick = ts;
+      }
+      requestAnimationFrame(loop);
+    }
 
-    // save periodically and on unload
-    window.addEventListener('beforeunload', save);
+    // ---------- INITIALIZE ----------
+    (function init(){
+      // try load
+      load();
 
-    // small auto-run for demo builder so UI not empty (optional)
-    // for demo: nothing auto-buy — user should buy
+      // ensure building entries exist
+      BUILDING_TEMPLATES.forEach(t => {
+        if(!state.buildings[t.id]) state.buildings[t.id] = {count:0,cost:t.baseCost,level:0};
+      });
+
+      // initial UI
+      renderBuildings();
+      renderAchievements();
+      recalcUI();
+
+      // auto save timestamp display
+      saveTimeEl.textContent = "Loaded: " + nowISO();
+
+      // set up save interval (already set) and start loop
+      requestAnimationFrame(loop);
+
+      // save periodically and on unload
+      window.addEventListener('beforeunload', save);
+
+      // small auto-run for demo builder so UI not empty (optional)
+      // for demo: nothing auto-buy — user should buy
+    })();
+
   })();
-
-})();
-</script>
+  </script>
 </body>
 </html>
